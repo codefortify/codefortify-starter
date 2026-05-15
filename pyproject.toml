@@ -1,0 +1,71 @@
+[build-system]
+requires = ["setuptools>=69.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "codefortify-starter"
+version = "0.1.1"
+description = "A production-ready Django project generator with optional HTMX, DRF, Docker, Celery, Redis, PostgreSQL, and MySQL support."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+  { name = "Codefortify", email = "maintainers@codefortify.dev" }
+]
+keywords = [
+  "django",
+  "django-starter",
+  "django-boilerplate",
+  "project-generator",
+  "python",
+  "codefortify",
+  "htmx",
+  "drf",
+  "docker",
+  "celery",
+  "redis",
+  "postgresql",
+  "mysql",
+  "cookiecutter-alternative",
+  "backend"
+]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Environment :: Console",
+  "Framework :: Django",
+  "Framework :: Django :: 5.2",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Software Development :: Code Generators",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = [
+  "typer>=0.12.0,<1.0.0",
+  "rich>=13.7.0,<14.0.0",
+  "Jinja2>=3.1.0,<4.0.0",
+]
+
+[project.scripts]
+codefortify-startproject = "codefortify_starter.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/codefortify/codefortify-starter"
+Source = "https://github.com/codefortify/codefortify-starter"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+include = ["codefortify_starter*"]
+
+[tool.setuptools.package-data]
+codefortify_starter = ["templates/**/*"]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "core.settings.dev"

@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}Home | [[ project_title ]]{% endblock %}
+
+{% block content %}
+<h1>[[ project_title ]]</h1>
+<p>Generated with codefortify-starter.</p>
+
+[% if use_htmx %]
+<section>
+    <button
+        hx-get="{% url 'home:htmx-example' %}"
+        hx-target="#htmx-fragment"
+        hx-swap="innerHTML"
+        type="button"
+    >
+        Load HTMX Fragment
+    </button>
+    <div id="htmx-fragment">
+        {% include "partials/example.html" %}
+    </div>
+</section>
+[% endif %]
+{% endblock %}
+

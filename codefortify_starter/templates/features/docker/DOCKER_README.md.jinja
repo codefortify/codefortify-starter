@@ -1,0 +1,67 @@
+# Docker Guide
+
+This project includes Docker support for local and production-style workflows.
+
+## Services
+
+- `web` (Django)
+[% if use_postgres %]- `db` (PostgreSQL)
+[% elif use_mysql %]- `db` (MySQL)
+[% else %]- `db` is not used (SQLite)
+[% endif %]
+[% if use_celery %]- `redis` (broker/result backend)
+- `celery` (worker)
+- `celery-beat` (optional profile)
+[% endif %]
+
+## Start local stack
+
+```bash
+cp .env.example .env
+docker compose build
+docker compose up -d
+docker compose exec web python manage.py check
+```
+
+## Stop stack
+
+```bash
+docker compose down
+```
+
+## Production-style compose
+
+```bash
+docker compose -f docker-compose.prod.yml up -d --build
+```
+
+[% if use_celery %]
+## Celery
+
+Inspect worker logs:
+
+```bash
+docker compose logs -f celery
+```
+
+Start beat profile:
+
+```bash
+docker compose --profile beat up -d celery-beat
+```
+[% endif %]
+
+## Helper script
+
+```bash
+./docker_deploy.sh up
+./docker_deploy.sh check
+./docker_deploy.sh logs web
+```
+
+[% if use_sqlite %]
+## Note about SQLite with Docker
+
+SQLite is supported for development convenience but is not suitable for multi-container production workloads.
+[% endif %]
+

@@ -1,0 +1,56 @@
+from django.http import JsonResponse
+from django.shortcuts import render
+from django.views.decorators.csrf import requires_csrf_token
+
+
+def _expects_json(request) -> bool:
+    accept_header = request.headers.get("Accept", "")
+    content_type = request.headers.get("Content-Type", "")
+    return (
+        "application/json" in accept_header
+        or "application/json" in content_type
+        or request.path.startswith("/api/")
+    )
+
+
+@requires_csrf_token
+def bad_request(request, exception, template_name="errors/400.html"):
+    if _expects_json(request):
+        return JsonResponse({"detail": "Bad request."}, status=400)
+    return render(request, template_name, status=400)
+
+
+@requires_csrf_token
+def permission_denied(request, exception, template_name="errors/403.html"):
+    if _expects_json(request):
+        return JsonResponse({"detail": "Permission denied."}, status=403)
+    return render(request, template_name, status=403)
+
+
+@requires_csrf_token
+def page_not_found(request, exception, template_name="errors/404.html"):
+    if _expects_json(request):
+        return JsonResponse({"detail": "Not found."}, status=404)
+    return render(request, template_name, status=404)
+
+
+@requires_csrf_token
+def method_not_allowed(request, exception, template_name="errors/405.html"):
+    if _expects_json(request):
+        return JsonResponse({"detail": "Method not allowed."}, status=405)
+    return render(request, template_name, status=405)
+
+
+@requires_csrf_token
+def server_error(request, template_name="errors/500.html"):
+    if _expects_json(request):
+        return JsonResponse({"detail": "Internal server error."}, status=500)
+    return render(request, template_name, status=500)
+
+
+@requires_csrf_token
+def csrf_failure(request, reason="", template_name="errors/403.html"):
+    if _expects_json(request):
+        return JsonResponse({"detail": "CSRF verification failed."}, status=403)
+    return render(request, template_name, status=403)
+

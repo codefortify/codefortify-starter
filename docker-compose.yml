@@ -1,0 +1,138 @@
+name: codefortifyauth
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: codefortifyauth-web
+    command: python manage.py runserver 0.0.0.0:8000
+    env_file:
+      - .env
+    environment:
+      CODEFORTIFY_ENVIRONMENT: ${CODEFORTIFY_ENVIRONMENT:-dev}
+      DEBUG: ${DEBUG:-True}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1,0.0.0.0}
+      CSRF_TRUSTED_ORIGINS: ${CSRF_TRUSTED_ORIGINS:-http://localhost:8000,http://127.0.0.1:8000}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-codefortifyauth}:${POSTGRES_PASSWORD:-codefortifyauth}@db:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-codefortifyauth}
+      POSTGRES_HOST: db
+      POSTGRES_PORT: ${POSTGRES_PORT:-5432}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+      CELERY_BROKER_URL: ${CELERY_BROKER_URL:-redis://redis:6379/0}
+      CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND:-redis://redis:6379/1}
+      WAIT_FOR_DB: "true"
+      RUN_MIGRATIONS: "true"
+      COLLECT_STATIC: "false"
+    volumes:
+      - .:/app
+      - static_data:/app/static_root
+      - media_data:/app/media_root
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "${APP_PORT:-8000}:8000"
+    restart: unless-stopped
+
+  db:
+    image: postgres:16-alpine
+    container_name: codefortifyauth-db
+    env_file:
+      - .env
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-codefortifyauth}
+      POSTGRES_USER: ${POSTGRES_USER:-codefortifyauth}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-codefortifyauth}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-codefortifyauth} -d ${POSTGRES_DB:-codefortifyauth}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 5s
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: codefortifyauth-redis
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 5s
+    restart: unless-stopped
+
+  celery:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: codefortifyauth-celery
+    command: celery -A core worker -l info
+    env_file:
+      - .env
+    environment:
+      CODEFORTIFY_ENVIRONMENT: ${CODEFORTIFY_ENVIRONMENT:-dev}
+      DEBUG: ${DEBUG:-True}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-codefortifyauth}:${POSTGRES_PASSWORD:-codefortifyauth}@db:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-codefortifyauth}
+      POSTGRES_HOST: db
+      POSTGRES_PORT: ${POSTGRES_PORT:-5432}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+      CELERY_BROKER_URL: ${CELERY_BROKER_URL:-redis://redis:6379/0}
+      CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND:-redis://redis:6379/1}
+      WAIT_FOR_DB: "true"
+      RUN_MIGRATIONS: "false"
+      COLLECT_STATIC: "false"
+    volumes:
+      - .:/app
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  celery-beat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: codefortifyauth-celery-beat
+    command: celery -A core beat -l info --scheduler celery.beat:PersistentScheduler --pidfile=
+    profiles:
+      - beat
+    env_file:
+      - .env
+    environment:
+      CODEFORTIFY_ENVIRONMENT: ${CODEFORTIFY_ENVIRONMENT:-dev}
+      DEBUG: ${DEBUG:-True}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-codefortifyauth}:${POSTGRES_PASSWORD:-codefortifyauth}@db:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-codefortifyauth}
+      POSTGRES_HOST: db
+      POSTGRES_PORT: ${POSTGRES_PORT:-5432}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+      CELERY_BROKER_URL: ${CELERY_BROKER_URL:-redis://redis:6379/0}
+      CELERY_RESULT_BACKEND: ${CELERY_RESULT_BACKEND:-redis://redis:6379/1}
+      WAIT_FOR_DB: "true"
+      RUN_MIGRATIONS: "false"
+      COLLECT_STATIC: "false"
+    volumes:
+      - .:/app
+      - celery_beat_data:/app/.celerybeat
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+  static_data:
+  media_data:
+  celery_beat_data:

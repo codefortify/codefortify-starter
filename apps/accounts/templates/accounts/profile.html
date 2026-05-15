@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Profile | CodefortifyAuth{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-lg-8">
+    <div class="card shadow-sm">
+      <div class="card-body p-4">
+        <h1 class="h5 mb-3">Profile</h1>
+        <dl class="row mb-0">
+          <dt class="col-sm-3">Email</dt>
+          <dd class="col-sm-9">{{ request.user.email }}</dd>
+          <dt class="col-sm-3">First name</dt>
+          <dd class="col-sm-9">{{ request.user.first_name|default:"-" }}</dd>
+          <dt class="col-sm-3">Last name</dt>
+          <dd class="col-sm-9">{{ request.user.last_name|default:"-" }}</dd>
+          <dt class="col-sm-3">Verified</dt>
+          <dd class="col-sm-9">{% if request.user.email_verified %}Yes{% else %}No{% endif %}</dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-4 mt-3 mt-lg-0">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <div class="d-grid gap-2">
+          <a class="btn btn-outline-primary" href="{% url 'accounts:profile-edit' %}">Edit Profile</a>
+          <a class="btn btn-outline-secondary" href="{% url 'accounts:password-change' %}">Change Password</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

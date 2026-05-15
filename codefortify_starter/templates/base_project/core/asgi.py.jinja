@@ -1,0 +1,10 @@
+from core.env import configure_environment
+
+
+configure_environment()
+
+from django.core.asgi import get_asgi_application
+
+
+application = get_asgi_application()
+

@@ -1,0 +1,208 @@
+name: [[ project_slug ]]
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: python manage.py runserver 0.0.0.0:8000
+    env_file:
+      - .env
+    environment:
+      CODEFORTIFY_ENVIRONMENT: ${CODEFORTIFY_ENVIRONMENT:-dev}
+      DEBUG: ${DEBUG:-True}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1,0.0.0.0}
+      CSRF_TRUSTED_ORIGINS: ${CSRF_TRUSTED_ORIGINS:-http://localhost:8000,http://127.0.0.1:8000}
+      WAIT_FOR_DB: "[% if use_postgres or use_mysql %]true[% else %]false[% endif %]"
+      DB_BACKEND: "[[ database ]]"
+      RUN_MIGRATIONS: "true"
+      COLLECT_STATIC: "false"
+[% if use_postgres %]
+      DATABASE_URL: postgres://${POSTGRES_USER:-[[ project_slug ]]}:${POSTGRES_PASSWORD:-change-me}@db:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-[[ project_slug ]]}
+      POSTGRES_HOST: db
+      POSTGRES_PORT: ${POSTGRES_PORT:-5432}
+[% elif use_mysql %]
+      DATABASE_URL: mysql://${MYSQL_USER:-[[ project_slug ]]}:${MYSQL_PASSWORD:-change-me}@db:${MYSQL_PORT:-3306}/${MYSQL_DATABASE:-[[ project_slug ]]}
+      MYSQL_HOST: db
+      MYSQL_PORT: ${MYSQL_PORT:-3306}
+[% else %]
+      DATABASE_URL: sqlite:////app/db.sqlite3
+[% endif %]
+[% if use_celery %]
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+[% endif %]
+    volumes:
+      - .:/app
+      - static_data:/app/static_root
+      - media_data:/app/media
+[% if use_postgres or use_mysql or use_celery %]
+    depends_on:
+[% if use_postgres or use_mysql %]
+      db:
+        condition: service_healthy
+[% endif %]
+[% if use_celery %]
+      redis:
+        condition: service_healthy
+[% endif %]
+[% endif %]
+    ports:
+      - "${APP_PORT:-8000}:8000"
+    restart: unless-stopped
+
+[% if use_postgres %]
+  db:
+    image: postgres:16-alpine
+    env_file:
+      - .env
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-[[ project_slug ]]}
+      POSTGRES_USER: ${POSTGRES_USER:-[[ project_slug ]]}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-[[ project_slug ]]} -d ${POSTGRES_DB:-[[ project_slug ]]}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 5s
+    restart: unless-stopped
+[% elif use_mysql %]
+  db:
+    image: mysql:8.4
+    env_file:
+      - .env
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-[[ project_slug ]]}
+      MYSQL_USER: ${MYSQL_USER:-[[ project_slug ]]}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-change-me}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root-change-me}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u${MYSQL_USER:-[[ project_slug ]]} -p${MYSQL_PASSWORD:-change-me}"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+    restart: unless-stopped
+[% endif %]
+[% if use_celery %]
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 5s
+    restart: unless-stopped
+
+  celery:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: celery -A core worker -l info
+    env_file:
+      - .env
+    environment:
+      CODEFORTIFY_ENVIRONMENT: ${CODEFORTIFY_ENVIRONMENT:-dev}
+      DEBUG: ${DEBUG:-True}
+      DB_BACKEND: "[[ database ]]"
+      WAIT_FOR_DB: "[% if use_postgres or use_mysql %]true[% else %]false[% endif %]"
+      RUN_MIGRATIONS: "false"
+      COLLECT_STATIC: "false"
+[% if use_postgres %]
+      DATABASE_URL: postgres://${POSTGRES_USER:-[[ project_slug ]]}:${POSTGRES_PASSWORD:-change-me}@db:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-[[ project_slug ]]}
+      POSTGRES_HOST: db
+      POSTGRES_PORT: ${POSTGRES_PORT:-5432}
+[% elif use_mysql %]
+      DATABASE_URL: mysql://${MYSQL_USER:-[[ project_slug ]]}:${MYSQL_PASSWORD:-change-me}@db:${MYSQL_PORT:-3306}/${MYSQL_DATABASE:-[[ project_slug ]]}
+      MYSQL_HOST: db
+      MYSQL_PORT: ${MYSQL_PORT:-3306}
+[% else %]
+      DATABASE_URL: sqlite:////app/db.sqlite3
+[% endif %]
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+    volumes:
+      - .:/app
+[% if use_postgres or use_mysql %]
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+[% else %]
+    depends_on:
+      redis:
+        condition: service_healthy
+[% endif %]
+    restart: unless-stopped
+
+  celery-beat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: celery -A core beat -l info --scheduler celery.beat:PersistentScheduler --pidfile=
+    profiles:
+      - beat
+    env_file:
+      - .env
+    environment:
+      CODEFORTIFY_ENVIRONMENT: ${CODEFORTIFY_ENVIRONMENT:-dev}
+      DEBUG: ${DEBUG:-True}
+      DB_BACKEND: "[[ database ]]"
+      WAIT_FOR_DB: "[% if use_postgres or use_mysql %]true[% else %]false[% endif %]"
+      RUN_MIGRATIONS: "false"
+      COLLECT_STATIC: "false"
+[% if use_postgres %]
+      DATABASE_URL: postgres://${POSTGRES_USER:-[[ project_slug ]]}:${POSTGRES_PASSWORD:-change-me}@db:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-[[ project_slug ]]}
+      POSTGRES_HOST: db
+      POSTGRES_PORT: ${POSTGRES_PORT:-5432}
+[% elif use_mysql %]
+      DATABASE_URL: mysql://${MYSQL_USER:-[[ project_slug ]]}:${MYSQL_PASSWORD:-change-me}@db:${MYSQL_PORT:-3306}/${MYSQL_DATABASE:-[[ project_slug ]]}
+      MYSQL_HOST: db
+      MYSQL_PORT: ${MYSQL_PORT:-3306}
+[% else %]
+      DATABASE_URL: sqlite:////app/db.sqlite3
+[% endif %]
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+    volumes:
+      - .:/app
+      - celery_beat_data:/app/.celerybeat
+[% if use_postgres or use_mysql %]
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+[% else %]
+    depends_on:
+      redis:
+        condition: service_healthy
+[% endif %]
+    restart: unless-stopped
+[% endif %]
+
+volumes:
+[% if use_postgres %]
+  postgres_data:
+[% elif use_mysql %]
+  mysql_data:
+[% endif %]
+[% if use_celery %]
+  redis_data:
+  celery_beat_data:
+[% endif %]
+  static_data:
+  media_data:

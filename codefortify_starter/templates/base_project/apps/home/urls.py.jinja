@@ -1,0 +1,14 @@
+from django.urls import path
+
+from apps.home.views import HomeView[% if use_htmx %], htmx_example[% endif %]
+
+
+app_name = "home"
+
+urlpatterns = [
+    path("", HomeView.as_view(), name="home"),
+[% if use_htmx %]
+    path("htmx/example/", htmx_example, name="htmx-example"),
+[% endif %]
+]
+

@@ -1,0 +1,66 @@
+# ------------------------------------------------------------------------------
+# Runtime
+# ------------------------------------------------------------------------------
+CODEFORTIFY_ENVIRONMENT=dev
+DEBUG=True
+SECRET_KEY=change-me
+ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0
+CSRF_TRUSTED_ORIGINS=http://localhost:8000,http://127.0.0.1:8000
+TIME_ZONE=UTC
+LANGUAGE_CODE=en-us
+
+# ------------------------------------------------------------------------------
+# Database
+# ------------------------------------------------------------------------------
+[% if use_sqlite %]
+DATABASE_URL=
+[% elif use_postgres %]
+[% if use_docker %]
+# Leave blank for local SQLite fallback.
+# DATABASE_URL=sqlite:///db.sqlite3
+# Docker PostgreSQL example:
+# DATABASE_URL=postgres://[[ project_slug ]]:[[ project_slug ]]@db:5432/[[ project_slug ]]
+[% endif %]
+DATABASE_URL=
+POSTGRES_DB=[[ project_slug ]]
+POSTGRES_USER=[[ project_slug ]]
+POSTGRES_PASSWORD=change-me
+POSTGRES_HOST=127.0.0.1
+POSTGRES_PORT=5432
+[% elif use_mysql %]
+[% if use_docker %]
+# Leave blank for local SQLite fallback.
+# DATABASE_URL=sqlite:///db.sqlite3
+# Docker MySQL example:
+# DATABASE_URL=mysql://[[ project_slug ]]:[[ project_slug ]]@db:3306/[[ project_slug ]]
+[% endif %]
+DATABASE_URL=
+MYSQL_DATABASE=[[ project_slug ]]
+MYSQL_USER=[[ project_slug ]]
+MYSQL_PASSWORD=change-me
+MYSQL_HOST=127.0.0.1
+MYSQL_PORT=3306
+[% endif %]
+DB_CONN_MAX_AGE=60
+
+[% if use_celery %]
+# ------------------------------------------------------------------------------
+# Redis / Celery
+# ------------------------------------------------------------------------------
+[% if use_docker %]
+REDIS_URL=redis://redis:6379/0
+CELERY_BROKER_URL=redis://redis:6379/0
+CELERY_RESULT_BACKEND=redis://redis:6379/1
+[% else %]
+REDIS_URL=redis://127.0.0.1:6379/0
+CELERY_BROKER_URL=redis://127.0.0.1:6379/0
+CELERY_RESULT_BACKEND=redis://127.0.0.1:6379/1
+[% endif %]
+[% endif %]
+
+# ------------------------------------------------------------------------------
+# Deployment / security flags
+# ------------------------------------------------------------------------------
+SECURE_SSL_REDIRECT=False
+RUN_MIGRATIONS=true
+COLLECT_STATIC=false

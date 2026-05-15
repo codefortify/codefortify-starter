@@ -1,0 +1,52 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+*.egg-info/
+.Python
+
+# Virtual environments
+.venv/
+.pkgvenv/
+venv/
+env/
+.testpkgvenv/
+
+# Build artifacts
+build/
+dist/
+*.whl
+
+# Tests and tooling
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Environment files
+.env
+.env.local
+.env.*
+!.env.example
+
+# IDE and OS
+.idea/
+.vscode/
+.DS_Store
+
+# Local Django runtime artifacts from legacy workspace
+db.sqlite3
+static_root/
+media_root/
+media/
+app_logs/
+
+# Demo projects generated during validation
+demo_basic/
+demo_htmx/
+demo_drf/
+demo_docker/
+demo_celery/
+demo_full/
+demo_project/
+demo_api/

@@ -1,0 +1,4 @@
+Hello {{ user.full_name|default:user.email }},
+
+Welcome to {{ app_name }}.
+Your account is now active.

@@ -1,0 +1,87 @@
+# [[ project_title ]]
+
+Generated with `codefortify-starter` ([[ package_version ]]).
+
+## Selected features
+
+- Database: `[[ database ]]`
+- HTMX: `[% if use_htmx %]enabled[% else %]disabled[% endif %]`
+- DRF: `[% if use_drf %]enabled[% else %]disabled[% endif %]`
+- Docker: `[% if use_docker %]enabled[% else %]disabled[% endif %]`
+- Celery: `[% if use_celery %]enabled[% else %]disabled[% endif %]`
+
+## Quick start
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
+python manage.py migrate
+python manage.py runserver
+```
+
+Run checks:
+
+```bash
+python manage.py check
+python manage.py test
+```
+
+[% if use_drf %]
+## API
+
+Base API route:
+
+- `GET /api/health/`
+
+[% endif %]
+[% if use_htmx %]
+## HTMX
+
+HTMX demo endpoint:
+
+- `GET /htmx/example/`
+
+[% endif %]
+[% if use_celery %]
+## Celery
+
+Run worker locally:
+
+```bash
+celery -A core worker -l info
+```
+
+Redis must be available at `REDIS_URL`.
+
+[% endif %]
+[% if use_docker %]
+## Docker
+
+Development compose:
+
+```bash
+docker compose up -d --build
+docker compose exec web python manage.py check
+```
+
+See `DOCKER_README.md` for deployment details.
+
+[% endif %]
+## Project layout
+
+```
+.
+|-- apps/
+|   |-- home/
+[% if use_drf %]|   `-- api/
+[% endif %]|-- core/
+|   `-- settings/
+|-- templates/
+|-- static/
+|-- media/
+|-- requirements.txt
+`-- manage.py
+```
+

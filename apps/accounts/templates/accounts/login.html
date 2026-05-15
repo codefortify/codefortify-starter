@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}Login | CodefortifyAuth{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6 col-lg-5">
+    <div class="card shadow-sm">
+      <div class="card-body p-4">
+        <h1 class="h5 mb-3">Sign in</h1>
+        <form method="post">
+          {% include "accounts/_form.html" %}
+          <button type="submit" class="btn btn-primary w-100">Login</button>
+        </form>
+        <div class="d-flex justify-content-between mt-3">
+          <a href="{% url 'accounts:register' %}">Create account</a>
+          <a href="{% url 'accounts:password-reset' %}">Forgot password?</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

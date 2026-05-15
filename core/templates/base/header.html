@@ -1,0 +1,25 @@
+{% url 'home:home' as home_url %}
+{% url 'accounts:login' as login_url %}
+{% url 'accounts:register' as register_url %}
+{% url 'accounts:profile' as profile_url %}
+{% url 'accounts:logout' as logout_url %}
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <div class="container">
+    <a class="navbar-brand" href="{{ home_url }}">CodefortifyAuth</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="mainNavbar">
+      <ul class="navbar-nav ms-auto">
+        {% if request.user.is_authenticated %}
+          <li class="nav-item"><a class="nav-link" href="{{ profile_url }}">Profile</a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ logout_url }}">Logout</a></li>
+        {% else %}
+          <li class="nav-item"><a class="nav-link" href="{{ login_url }}">Login</a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ register_url }}">Register</a></li>
+        {% endif %}
+      </ul>
+    </div>
+  </div>
+</nav>
