@@ -8,7 +8,7 @@ from typing import Final
 PACKAGE_NAME: Final[str] = "codefortify-starter"
 IMPORT_PACKAGE: Final[str] = "codefortify_starter"
 CLI_COMMAND: Final[str] = "codefortify-startproject"
-PACKAGE_VERSION: Final[str] = "0.1.1"
+PACKAGE_VERSION: Final[str] = "1.0.0"
 
 VALID_DATABASES: Final[tuple[str, ...]] = ("sqlite", "postgres", "mysql")
 

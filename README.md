@@ -31,6 +31,12 @@ Install from PyPI:
 pip install codefortify-starter
 ```
 
+Install an exact version:
+
+```bash
+pip install codefortify-starter==1.0.0
+```
+
 Verify the CLI:
 
 ```bash
@@ -231,7 +237,7 @@ Use this only for testing pre-release package builds:
 ```bash
 pip install --index-url https://test.pypi.org/simple/ \
   --extra-index-url https://pypi.org/simple \
-  codefortify-starter==0.1.1
+  codefortify-starter==1.0.0
 ```
 
 ## License

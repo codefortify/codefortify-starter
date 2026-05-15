@@ -2,6 +2,6 @@
 from core.celery import app as celery_app
 [% endif %]
 
-__version__ = "0.1.1"
+__version__ = "1.0.0"
 
 __all__ = ["__version__"[% if use_celery %], "celery_app"[% endif %]]
